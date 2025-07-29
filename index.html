@@ -287,3 +287,46 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Radha Naam Jap</title>
+  <style>
+    body {
+      background-color: black;
+      color: pink;
+      font-family: 'Arial', sans-serif;
+      font-size: 2rem;
+      text-align: center;
+      padding: 2rem;
+    }
+    #output {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>📿 Radha Naam Jap 📿</h1>
+  <div id="output"></div>
+
+  <script>
+    const output = document.getElementById('output');
+    const japWord = 'Radha ';
+    const speed = 1; // how many "Radha"s per animation frame (~60 fps)
+
+    function jap() {
+      for (let i = 0; i < speed; i++) {
+        output.textContent += japWord;
+      }
+      if (output.textContent.length > 10000) {
+        output.textContent = output.textContent.slice(-5000); // keep it performant
+      }
+      requestAnimationFrame(jap);
+    }
+
+    jap();
+  </script>
+</body>
+</html>
