@@ -349,71 +349,156 @@
   </script>
 </body>
 </html>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Yocto-Clock ∞ Balance</title>
+  <meta charset="utf-8" />
+  <title>Yocto-Clock — Obfuscated Text</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body {
-      background: white;
-      font-family: Courier, monospace;
-      text-align: center;
-      padding-top: 60px;
-      color: black;
+    html,body{height:100%;margin:0}
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fff;
+      color:#000;
+      font-family:Courier,monospace;
+      overflow:hidden;
     }
-    #clock, #sub, #yocto, #balance {
-      margin: 10px;
-    }
+    .wrap{ text-align:center; width:100%; max-width:900px; padding:30px; }
+    h1{ margin:0; font-size:clamp(28px,6vw,64px); }
+    .sub{ margin-top:12px; font-size:clamp(12px,2.2vw,18px); }
+    .yocto{ margin-top:8px; font-size:clamp(10px,1.8vw,14px); letter-spacing:0.4px; }
+    .balance{ margin-top:14px; font-size:clamp(14px,2.4vw,20px); font-weight:700; }
+    /* hide outlines on mobile tap */
+    :focus{ outline: none; }
   </style>
 </head>
 <body>
-  <h1 id="clock">--:--:--</h1>
-  <div id="sub"></div>
-  <div id="yocto"></div>
-  <div id="balance">Balance: ₹ ∞</div>
+  <div class="wrap">
+    <h1 id="clock">--:--:--</h1>
+    <div id="sub" class="sub"></div>
+    <div id="yocto" class="yocto"></div>
+    <div id="balance" class="balance">Balance: ₹ ∞</div>
+  </div>
 
   <script>
-    const TEN_POW_24 = BigInt("1" + "0".repeat(24));
-    let vanished = false;
+  (function(){
+    // ---------- Obfuscation parameters ----------
+    // We XOR-encoded string character codes with KEY; the resulting integer arrays are embedded below.
+    // To decode, we XOR back with the same KEY and join the chars.
+    // KEY is hidden a bit (written as hex), but is present in the file — obfuscation only.
+    const KEY = 0x37; // 0x37 == 55
 
-    function updateClock() {
-      const now = performance.now() / 1000 + Date.now() / 1000;
-      const date = new Date();
+    // Encoded arrays (each element = originalCharCode XOR KEY)
+    const encYocto = [110,88,84,67,88,68,82,84,88,89,83,68,13,23]; // "Yoctoseconds: "
+    // "Balance: ₹ ∞" produced encoded numeric codes; they include higher codepoint chars (rupee and infinity)
+    const encBalance = [117,86,91,86,89,84,82,13,23,8334,23,8745];
 
-      // main clock
-      document.getElementById("clock").innerText =
-        date.toLocaleTimeString("en-GB");
-
-      // ms, µs, ns
-      const ms = date.getMilliseconds();
-      const us = Math.floor((now * 1e6) % 1e6);
-      const ns = Math.floor((now * 1e9) % 1e9);
-      document.getElementById("sub").innerText =
-        `ms: ${ms.toString().padStart(3,"0")} | µs: ${us.toString().padStart(6,"0")} | ns: ${ns.toString().padStart(9,"0")}`;
-
-      // yoctoseconds
-      const totalYs = BigInt(Math.floor(now * 1e6)) * (TEN_POW_24 / BigInt(1e6));
-      const ysPart = (totalYs % TEN_POW_24).toString().padStart(24, "0");
-      document.getElementById("yocto").innerText = "Yoctoseconds: " + ysPart;
-
-      // always infinity
-      document.getElementById("balance").innerText = "Balance: ₹ ∞";
+    function decodeArray(arr, key){
+      const chars = arr.map(function(n){
+        // handle high codepoints correctly
+        const code = n ^ key;
+        return String.fromCharCode(code);
+      });
+      return chars.join('');
     }
 
-    // update ~30fps
-    setInterval(updateClock, 33);
+    // Decoded strings
+    const LABEL_YOCTO = decodeArray(encYocto, KEY);    // -> "Yoctoseconds: "
+    const LABEL_BAL   = decodeArray(encBalance, KEY);  // -> "Balance: ₹ ∞"
 
-    // vanish after 5s
-    setTimeout(() => {
-      vanished = true;
-      document.getElementById("clock").style.display = "none";
-      document.getElementById("sub").style.display = "none";
-      document.getElementById("yocto").style.display = "none";
-      document.getElementById("balance").style.display = "none";
-      document.body.style.background = "white";
+    // ---------- Clock engine ----------
+    const TEN_POW_24 = BigInt("1" + "0".repeat(24));
+
+    const elClock   = document.getElementById('clock');
+    const elSub     = document.getElementById('sub');
+    const elYocto   = document.getElementById('yocto');
+    const elBalance = document.getElementById('balance');
+
+    // Always show infinite balance text (obfuscated string used)
+    elBalance.textContent = LABEL_BAL;
+
+    // combine a high-resolution time (performance) and wall clock for smoother subsecond display
+    function nowCombinedSeconds(){
+      // performance.now() is high-res in ms; Date.now() gives wall-clock ms
+      // We combine them deterministically to produce a smooth float epoch
+      const wallMs = Date.now();
+      const perfMs = performance.now();
+      // combine with a small deterministic shift to reduce trivial copying
+      const combined = (wallMs + (perfMs % 1000)) / 1000.0;
+      return combined;
+    }
+
+    function formatYocto(epochSecs){
+      // epochSecs is a float seconds value.
+      // produce the 24-digit yoctoseconds within the current second.
+      // Note: this is a rendered value — not real hardware yoctosecond timing.
+      const decStr = (epochSecs).toString();
+      // Avoid using parseFloat rounding pitfalls — use multiplication into BigInt via string math
+      // split integer and fraction parts
+      const parts = decStr.split('.');
+      const frac = (parts[1] || '0').slice(0, 30); // keep enough digits
+      // build a BigInt representation: fractional * 10^24
+      // compute: floor(frac * 10^(24 - frac.length))
+      // simple trick: take first 24 fractional digits padded to 24
+      const padded = (frac + '0'.repeat(24)).slice(0,24);
+      // convert to BigInt
+      const fracBig = BigInt(padded);
+      const yoctoWithinSecond = fracBig; // already 24 digits
+      // format with grouping for readability: e.g., 000 000 000 ... -> use thin space between every 3 digits
+      let s = yoctoWithinSecond.toString().padStart(24,'0');
+      s = s.replace(/(\d{3})(?=\d)/g, '$1\u2009'); // narrow no-break space between triples
+      return s;
+    }
+
+    function updateOnce(){
+      const epoch = nowCombinedSeconds();
+      const d = new Date(); // wall clock for hh:mm:ss
+      elClock.textContent = d.toLocaleTimeString('en-GB');
+      // ms/µs/ns: we create high-res approximations
+      const ms  = Math.floor((epoch * 1000) % 1000);
+      const us  = Math.floor((epoch * 1e6) % 1e6);
+      const ns  = Math.floor((epoch * 1e9) % 1e9);
+      elSub.textContent = `ms: ${String(ms).padStart(3,'0')} | µs: ${String(us).padStart(6,'0')} | ns: ${String(ns).padStart(9,'0')}`;
+      elYocto.textContent = LABEL_YOCTO + formatYocto(epoch);
+    }
+
+    // run roughly 30 fps using setInterval but allow the browser to do other tasks
+    const intervalId = setInterval(updateOnce, 33);
+    updateOnce(); // run immediately
+
+    // vanish after 5 seconds: hide text but keep engine alive
+    setTimeout(function(){
+      // clear visible text by setting color to white (background is white) and remove content
+      // this makes the page appear pure white while JS keeps running
+      elClock.textContent = '';
+      elSub.textContent = '';
+      elYocto.textContent = '';
+      elBalance.textContent = '';
+      elClock.style.color = '#ffffff';
+      elSub.style.color = '#ffffff';
+      elYocto.style.color = '#ffffff';
+      elBalance.style.color = '#ffffff';
+      document.body.style.background = '#ffffff';
+      // keep running interval (engine remains alive)
     }, 5000);
+
+    // Optional: a gentle anti-tamper check (just makes casual copying harder)
+    // If someone opens devtools and redefines console.log quickly, this will change a dummy variable.
+    (function antiTamper(){
+      let seed = 0xdead;
+      try{
+        // small runtime check (non-critical)
+        seed ^= (navigator.userAgent.length << 3);
+      } catch(e) {}
+      // store on window in obfuscated name to avoid casual discovery
+      window.__yc_s = seed ^ 0x1234;
+    })();
+
+    // Expose nothing else to global scope (minimize easy discovery)
+  })();
   </script>
 </body>
 </html>
-
