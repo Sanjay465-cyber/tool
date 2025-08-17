@@ -349,4 +349,71 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Yocto-Clock ∞ Balance</title>
+  <style>
+    body {
+      background: white;
+      font-family: Courier, monospace;
+      text-align: center;
+      padding-top: 60px;
+      color: black;
+    }
+    #clock, #sub, #yocto, #balance {
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="clock">--:--:--</h1>
+  <div id="sub"></div>
+  <div id="yocto"></div>
+  <div id="balance">Balance: ₹ ∞</div>
+
+  <script>
+    const TEN_POW_24 = BigInt("1" + "0".repeat(24));
+    let vanished = false;
+
+    function updateClock() {
+      const now = performance.now() / 1000 + Date.now() / 1000;
+      const date = new Date();
+
+      // main clock
+      document.getElementById("clock").innerText =
+        date.toLocaleTimeString("en-GB");
+
+      // ms, µs, ns
+      const ms = date.getMilliseconds();
+      const us = Math.floor((now * 1e6) % 1e6);
+      const ns = Math.floor((now * 1e9) % 1e9);
+      document.getElementById("sub").innerText =
+        `ms: ${ms.toString().padStart(3,"0")} | µs: ${us.toString().padStart(6,"0")} | ns: ${ns.toString().padStart(9,"0")}`;
+
+      // yoctoseconds
+      const totalYs = BigInt(Math.floor(now * 1e6)) * (TEN_POW_24 / BigInt(1e6));
+      const ysPart = (totalYs % TEN_POW_24).toString().padStart(24, "0");
+      document.getElementById("yocto").innerText = "Yoctoseconds: " + ysPart;
+
+      // always infinity
+      document.getElementById("balance").innerText = "Balance: ₹ ∞";
+    }
+
+    // update ~30fps
+    setInterval(updateClock, 33);
+
+    // vanish after 5s
+    setTimeout(() => {
+      vanished = true;
+      document.getElementById("clock").style.display = "none";
+      document.getElementById("sub").style.display = "none";
+      document.getElementById("yocto").style.display = "none";
+      document.getElementById("balance").style.display = "none";
+      document.body.style.background = "white";
+    }, 5000);
+  </script>
+</body>
+</html>
 
