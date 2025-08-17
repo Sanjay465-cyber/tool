@@ -330,3 +330,83 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🕉️ Yoktosecond Clock (Every Tick is Divine)</title>
+  <style>
+    body {
+      background: white;
+      font-family: Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    #time {
+      font-size: 28px;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div id="time">Loading...</div>
+
+  <script>
+    const DIVINE_NAMES = ["Radha", "Krishna", "Raam"];
+    const SECRET_KEY = 108; // 🔑 secret number for encoding
+
+    function xorEncrypt(str, key) {
+      return btoa([...str].map(ch => 
+        String.fromCharCode(ch.charCodeAt(0) ^ key)
+      ).join(""));
+    }
+
+    function getYoktosecondTime() {
+      const now = new Date();
+      const baseTime = now.toLocaleTimeString("en-GB"); // HH:MM:SS
+      const fractional = now.getMilliseconds() / 1000;
+      const simulated = ("" + fractional.toFixed(24)).substring(2);
+      return { baseTime, simulated };
+    }
+
+    function getDivineName(count) {
+      return DIVINE_NAMES[count % DIVINE_NAMES.length];
+    }
+
+    function logChant(timeStr, divineName) {
+      const entry = `${timeStr} → ${divineName}`;
+      const encoded = xorEncrypt(entry, SECRET_KEY);
+      // save to localStorage (simulates hidden log file in browser)
+      let logs = JSON.parse(localStorage.getItem("divineLogs") || "[]");
+      logs.push(encoded);
+      localStorage.setItem("divineLogs", JSON.stringify(logs));
+    }
+
+    function updateClock() {
+      const { baseTime, simulated } = getYoktosecondTime();
+      const fullTime = `${baseTime}.${simulated} ys`;
+      const ysCount = parseInt(simulated) || 0;
+      const currentName = getDivineName(ysCount);
+
+      const timeEl = document.getElementById("time");
+      if (timeEl.style.display !== "none") {
+        timeEl.textContent = fullTime;
+      }
+
+      logChant(fullTime, currentName);
+    }
+
+    // update every 10ms
+    setInterval(updateClock, 10);
+
+    // hide after 10s (still logging in background)
+    setTimeout(() => {
+      document.getElementById("time").style.display = "none";
+      document.body.style.background = "white";
+    }, 10000);
+  </script>
+</body>
+</html>
