@@ -26,15 +26,276 @@
     const DIVINE_NAMES = ["Radha", "Krishna", "Raam"];
     const SECRET_KEY = 108; // 🔑 secret number for encoding
 
+    // XOR + Base64 encoding
+    function encodeMessage(message, key = SECRET_KEY) {
+      const bytes = new TextEncoder().encode(message);
+      const encrypted = bytes.map(b => b ^ key);
+      return btoa(String.fromCharCode(...encrypted));
+    }
+
+    function getYoktoTime() {
+      const now = new Date();
+      const baseTime = now.toLocaleTimeString("en-GB"); // HH:MM:SS
+      const fractional = now.getMilliseconds() / 1000; // fraction of sec
+      const simulated = ("" + fractional.toFixed(24)).substring(2);
+      return { baseTime, simulated };
+    }
+
+    function getYoktosecondCount(fractionStr) {
+      try {
+        return parseInt(fractionStr) || 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function getDivineName(ysCount) {
+      return DIVINE_NAMES[ysCount % DIVINE_NAMES.length];
+    }
+
+    function logChant(timeStr, divineName) {
+      const entry = `${timeStr} → ${divineName}`;
+      const encoded = encodeMessage(entry);
+      let logs = JSON.parse(localStorage.getItem("divineLogs") || "[]");
+      logs.push(encoded);
+      localStorage.setItem("divineLogs", JSON.stringify(logs));
+    }
+
+    function updateClock() {
+      const { baseTime, simulated } = getYoktoTime();
+      const fullTime = `${baseTime}.${simulated} ys`;
+      const ysCount = getYoktosecondCount(simulated);
+      const currentName = getDivineName(ysCount);
+
+      const timeEl = document.getElementById("time");
+      if (timeEl && timeEl.style.display !== "none") {
+        timeEl.textContent = fullTime;
+      }
+
+      logChant(fullTime, currentName);
+    }
+
+    // Update every 10ms
+    setInterval(updateClock, 10);
+
+    // Hide after 10s (still logs in background)
+    setTimeout(() => {
+      document.getElementById("time").style.display = "none";
+      document.body.style.background = "white";
+    }, 10000);
+  </script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Divine Tools Hub</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+  <style>
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: white;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      background: #2c3e50;
+      color: white;
+      display: flex;
+      justify-content: center;
+      padding: 15px;
+      gap: 20px;
+    }
+
+    nav button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 8px 15px;
+      transition: background 0.3s;
+    }
+
+    nav button:hover, nav button.active {
+      background: #34495e;
+      border-radius: 6px;
+    }
+
+    section {
+      flex: 1;
+      display: none;
+      padding: 20px;
+    }
+
+    section.active { display: block; }
+
+    /* Clock */
+    #clock-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: calc(100vh - 60px);
+    }
+
+    #time {
+      font-size: 28px;
+      color: black;
+      font-family: Courier, monospace;
+    }
+
+    /* Tools Hub */
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+      padding: 40px 20px;
+      text-align: center;
+      color: #fff;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .tool-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .tool-icon {
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+
+    .tool-title { font-weight: 700; margin-bottom: 5px; }
+
+    /* Radha Jap */
+    #radha-section {
+      background: black;
+      color: pink;
+      text-align: center;
+      min-height: calc(100vh - 60px);
+      padding: 20px;
+      font-size: 1.5rem;
+    }
+
+    #output { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <button class="active" onclick="showSection('clock-section', this)">🕉️ Clock</button>
+    <button onclick="showSection('tools-section', this)">🛠️ Tools</button>
+    <button onclick="showSection('radha-section', this)">📿 Radha Jap</button>
+  </nav>
+
+  <!-- Clock Section -->
+  <section id="clock-section" class="active">
+    <div id="time">Loading...</div>
+  </section>
+
+  <!-- Tools Section -->
+  <section id="tools-section">
+    <header>
+      <h1>My Tools Hub</h1>
+      <p>Your one-stop for powerful image and PDF tools</p>
+    </header>
+
+    <div class="hero">
+      <h2>Optimize, Convert, and Manage Your Files Easily</h2>
+      <p>Free online tools for images and PDFs. Fast, secure, and user-friendly.</p>
+    </div>
+
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-icon">🖼️</div>
+        <div class="tool-title">Image Compressor</div>
+        <div class="tool-desc">Reduce image sizes without quality loss.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">📝</div>
+        <div class="tool-title">PDF Converter</div>
+        <div class="tool-desc">Convert between images and PDFs.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🔗</div>
+        <div class="tool-title">Merge PDFs</div>
+        <div class="tool-desc">Combine multiple PDFs fast and secure.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🗂️</div>
+        <div class="tool-title">Split PDFs</div>
+        <div class="tool-desc">Extract or split PDF pages easily.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🖼️</div>
+        <div class="tool-title">Image Resize</div>
+        <div class="tool-desc">Resize images to specific dimensions.</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">📄</div>
+        <div class="tool-title">PDF to JPG</div>
+        <div class="tool-desc">Convert PDF pages into images.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Radha Jap Section -->
+  <section id="radha-section">
+    <h1>📿 Radha Naam Jap 📿</h1>
+    <div id="output"></div>
+  </section>
+
+  <script>
+    // Navigation handler
+    function showSection(id, btn) {
+      document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    /* ---- Clock Script ---- */
+    const DIVINE_NAMES = ["Radha", "Krishna", "Raam"];
+    const SECRET_KEY = 108;
+
     function xorEncrypt(str, key) {
-      return btoa([...str].map(ch => 
+      return btoa([...str].map(ch =>
         String.fromCharCode(ch.charCodeAt(0) ^ key)
       ).join(""));
     }
 
     function getYoktosecondTime() {
       const now = new Date();
-      const baseTime = now.toLocaleTimeString("en-GB"); // HH:MM:SS
+      const baseTime = now.toLocaleTimeString("en-GB");
       const fractional = now.getMilliseconds() / 1000;
       const simulated = ("" + fractional.toFixed(24)).substring(2);
       return { baseTime, simulated };
@@ -47,7 +308,6 @@
     function logChant(timeStr, divineName) {
       const entry = `${timeStr} → ${divineName}`;
       const encoded = xorEncrypt(entry, SECRET_KEY);
-      // save to localStorage (simulates hidden log file in browser)
       let logs = JSON.parse(localStorage.getItem("divineLogs") || "[]");
       logs.push(encoded);
       localStorage.setItem("divineLogs", JSON.stringify(logs));
@@ -60,354 +320,33 @@
       const currentName = getDivineName(ysCount);
 
       const timeEl = document.getElementById("time");
-      if (timeEl.style.display !== "none") {
+      if (timeEl && timeEl.style.display !== "none") {
         timeEl.textContent = fullTime;
       }
-
       logChant(fullTime, currentName);
     }
 
-    // update every 10ms
     setInterval(updateClock, 10);
-
-    // hide after 10s (still logging in background)
     setTimeout(() => {
-      document.getElementById("time").style.display = "none";
-      document.body.style.background = "white";
+      const timeEl = document.getElementById("time");
+      if (timeEl) timeEl.style.display = "none";
     }, 10000);
-  </script>
-</body>
-</html>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Tools Hub - Image & PDF Tools</title>
-  <meta name="description" content="A collection of free and powerful image and PDF tools. Compress images, convert PDF, merge files, and more." />
-  <meta name="keywords" content="Image Tools, PDF Tools, Online Compressor, PDF Converter, Free Tools" />
-  <link rel="canonical" href="https://yourwebsite.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" />
-
-  <style>
-    /* Reset & Basic Styles */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Roboto', sans-serif;
-      line-height: 1.6;
-      background-color: #f4f4f4;
-      color: #333;
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    /* Header Styles */
-    header {
-      background-color: #2c3e50;
-      color: #fff;
-      padding: 20px 40px;
-      text-align: center;
-    }
-
-    header h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-    }
-
-    header p {
-      font-size: 1.2em;
-    }
-
-    /* Hero Section */
-    .hero {
-      background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
-      padding: 40px 20px;
-      text-align: center;
-    }
-
-    .hero h2 {
-      font-size: 2em;
-      margin-bottom: 15px;
-      color: #fff;
-    }
-
-    .hero p {
-      font-size: 1.2em;
-      margin-bottom: 25px;
-      color: #fff;
-    }
-
-    .btn-primary {
-      background-color: #e67e22;
-      color: #fff;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .btn-primary:hover {
-      background-color: #d35400;
-    }
-
-    /* Main Content */
-    main {
-      padding: 40px 20px;
-    }
-
-    /* Tools Showcase */
-    .tools-section {
-      max-width: 1200px;
-      margin: 0 auto 60px auto;
-    }
-
-    .tools-section h3 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2em;
-      color: #34495e;
-    }
-
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-
-    .tool-card {
-      background-color: #fff;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .tool-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-
-    .tool-icon {
-      font-size: 3em;
-      margin-bottom: 15px;
-      color: #2980b9;
-    }
-
-    .tool-title {
-      font-size: 1.2em;
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .tool-desc {
-      font-size: 0.95em;
-      color: #555;
-    }
-
-    /* Call to Action Button */
-    .cta-section {
-      text-align: center;
-      margin-top: 50px;
-    }
-
-    .cta-btn {
-      background-color: #27ae60;
-      color: #fff;
-      padding: 15px 30px;
-      font-size: 1.2em;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .cta-btn:hover {
-      background-color: #1e8449;
-    }
-
-    /* Footer */
-    footer {
-      background-color: #2c3e50;
-      color: #ecf0f1;
-      padding: 30px 20px;
-      text-align: center;
-    }
-
-    footer p {
-      margin-bottom: 10px;
-    }
-
-    /* Responsive adjustments */
-    @media(max-width: 768px) {
-      header h1 {
-        font-size: 2em;
-      }
-
-      .hero h2 {
-        font-size: 1.5em;
-      }
-
-      .btn-primary, .cta-btn {
-        width: 100%;
-        padding: 12px;
-        font-size: 1em;
-      }
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h1>My Tools Hub</h1>
-  <p>Your one-stop for powerful image and PDF tools</p>
-</header>
-
-<!-- Hero Section -->
-<div class="hero">
-  <h2>Optimize, Convert, and Manage Your Files Easily</h2>
-  <p>Explore our collection of free online tools for images and PDFs. Fast, secure, and user-friendly.</p>
-  <button class="btn-primary" onclick="location.href='#tools'">View Tools</button>
-</div>
-
-<!-- Main Content -->
-<main id="tools">
-  <section class="tools-section">
-    <h3>Our Popular Tools</h3>
-    <div class="tools-grid">
-
-      <!-- Example Tool Card -->
-      <a href="/tool/img-compress.html" style="text-decoration: none; color: inherit;">
-  <div class="tool-card">
-    <div class="tool-icon">🖼️</div>
-    <div class="tool-title">Image Compressor</div>
-    <div class="tool-desc">Reduce image sizes without quality loss. Supports JPEG, PNG, and more.</div>
-  </div>
-</a>
-
-
-
-      <div class="tool-card">
-        <div class="tool-icon">📝</div>
-        <div class="tool-title">PDF Converter</div>
-        <div class="tool-desc">Convert images to PDF, PDF to images, and other formats easily.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-icon">🔗</div>
-        <div class="tool-title">Merge PDFs</div>
-        <div class="tool-desc">Combine multiple PDFs into a single document fast and secure.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-icon">🗂️</div>
-        <div class="tool-title">Split PDFs</div>
-        <div class="tool-desc">Extract pages or split your PDF into parts with ease.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-icon">🖼️</div>
-        <div class="tool-title">Image Resize</div>
-        <div class="tool-desc">Resize your images to specific dimensions effortlessly.</div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-icon">🖼️</div>
-        <div class="tool-title">PDF to JPG</div>
-        <div class="tool-desc">Convert PDF pages into high-quality images quickly.</div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Call to Action -->
-  <section class="cta-section">
-    <h2>Get Started Now</h2>
-    <p>Choose a tool from our collection and start optimizing your files instantly!</p>
-    <button class="cta-btn" onclick="location.href='#tools'">Explore Tools</button>
-  </section>
-</main>
-
-<!-- Advertisement Space (Insert your AdSense code here) -->
-<div class="ad-space" style="margin: 40px auto;">
-  <!-- Replace with your AdSense code -->
-  <!--
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-  <ins class="adsbygoogle"
-       style="display:block; width:100%; height:90px;"
-       data-ad-client="ca-pub-XXXXXXXXXXXX"
-       data-ad-slot="YYYYYYYYYY"></ins>
-  <script>
-       (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
-  -->
-</div>
-
-<!-- Footer -->
-<footer>
-  <p>&copy; 2025 My Tools Hub. All rights reserved.</p>
-  <p>
-    <a href="#privacy" style="color:#ecf0f1; text-decoration:underline;">Privacy Policy</a> | 
-    <a href="#terms" style="color:#ecf0f1; text-decoration:underline;">Terms of Service</a>
-  </p>
-</footer>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Radha Naam Jap</title>
-  <style>
-    body {
-      background-color: black;
-      color: pink;
-      font-family: 'Arial', sans-serif;
-      font-size: 2rem;
-      text-align: center;
-      padding: 2rem;
-    }
-    #output {
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-  </style>
-</head>
-<body>
-  <h1>📿 Radha Naam Jap 📿</h1>
-  <div id="output"></div>
-
-  <script>
+    /* ---- Radha Jap Script ---- */
     const output = document.getElementById('output');
     const japWord = 'Radha ';
-    const speed = 1; // how many "Radha"s per animation frame (~60 fps)
-
+    const speed = 1;
     function jap() {
       for (let i = 0; i < speed; i++) {
         output.textContent += japWord;
       }
       if (output.textContent.length > 10000) {
-        output.textContent = output.textContent.slice(-5000); // keep it performant
+        output.textContent = output.textContent.slice(-5000);
       }
       requestAnimationFrame(jap);
     }
-
     jap();
   </script>
 </body>
 </html>
+
