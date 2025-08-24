@@ -1,4 +1,61 @@
 <!DOCTYPE html>
+<html lang="sa">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chandi Path — Locked</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: "Noto Serif Devanagari", serif;
+      background: #fefbea;
+      color: #4a2c2a;
+      line-height: 1.8;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+    .card {
+      width: min(900px, 92vw);
+      background: #fff8e6;
+      border: 1px solid #f0e2c2;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.06);
+      padding: 24px;
+    }
+    .scroll { height: 80vh; overflow: hidden; position: relative; }
+    .text   { position: absolute; width: 100%; animation: scroll-up 200s linear infinite; }
+    @keyframes scroll-up { 0% { top: 100%; } 100% { top: -100%; } }
+    .muted { color: #9c8c7a; font-size: 0.9rem; }
+    input, button { padding: 10px 14px; border-radius: 12px; border: 1px solid #ccb889; }
+    button { background: #fff0c7; cursor: pointer; font-weight: 600; }
+    #content { display:none; margin-top:18px; }
+    #hiddenMantra { display:none; }
+    .lock-controls { margin:12px 0; }
+  </style>
+</head>
+<body>
+  <div class="card" id="lockCard">
+    <h2>🔒 Protected Page</h2>
+    <div class="muted">Enter numeric code to unlock</div>
+    <div class="lock-controls">
+      <input id="code" type="password" inputmode="numeric" placeholder="Enter code" />
+      <button id="unlock">Unlock</button>
+    </div>
+    <div id="status" class="muted"></div>
+  </div>
+
+  <!-- Content area (appears after unlock) -->
+  <div id="content"></div>
+
+  <!-- HIDDEN MANTRA (locked until unlock) -->
+  <div id="hiddenMantra">
+    <h1>॥ चण्डीपाठ ॥</h1>
+    <div class="scroll">
+      <div class="text">
+        <!-- 🔻 PUT YOUR FULL MANTRA / PATH HERE 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2462,9 +2519,62 @@
 परो दिवा पर एना पृथिव्यै -पृथिव्यै
 तावती महिना सं बभूव ॥ ८॥
 ॥ इति ऋग्वेदोक्तं देवीसूक्तं समाप्तम् ॥समाप्तम्
-॥ ॐ तत् सत्तत् ॐसत् ॥
+॥ ॐ तत् सत्तत् ॐसत् ॥ 🔻 -->
       </p>
     </div>
   </div>
+</body>
+</html>
+ <p>ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे …</p>
+        <p>(Add more verses here, they will scroll infinitely)</p>
+        <!-- 🔺 END MANTRA 🔺 -->
+      </div>
+    </div>
+  </div>
+  <!-- END MANTRA -->
+
+  <script>
+    // ===== CONFIG =====
+    // SHA-256 of code "842137"
+    const PASS_HASH_HEX = "0e65cb3eca54f92b8a7e7be6d47cf849f8f42a1ccdf731e83ab7278b8e47c1e6"; 
+    // ==================
+
+    const enc = new TextEncoder();
+    function hex(buf) {
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2,"0")).join("");
+    }
+    async function sha256Hex(str) {
+      const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
+      return hex(buf);
+    }
+
+    async function tryUnlock(code) {
+      const status = document.getElementById("status");
+      status.textContent = "Checking…";
+      const h = await sha256Hex(code);
+      if (h !== PASS_HASH_HEX) {
+        status.textContent = "Incorrect code.";
+        return;
+      }
+      status.textContent = "Unlocked ✅";
+
+      // Show mantra
+      const hidden = document.getElementById("hiddenMantra").innerHTML;
+      document.getElementById("content").innerHTML = hidden;
+      document.getElementById("content").style.display = "block";
+
+      // Hide lock UI
+      document.getElementById("lockCard").style.display = "none";
+    }
+
+    document.getElementById("unlock").addEventListener("click", () => {
+      const val = document.getElementById("code").value.trim();
+      tryUnlock(val);
+    });
+    document.getElementById("code").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("unlock").click();
+    });
+  </script>
 </body>
 </html>
