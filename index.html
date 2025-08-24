@@ -2519,7 +2519,337 @@
 परो दिवा पर एना पृथिव्यै -पृथिव्यै
 तावती महिना सं बभूव ॥ ८॥
 ॥ इति ऋग्वेदोक्तं देवीसूक्तं समाप्तम् ॥समाप्तम्
-॥ ॐ तत् सत्तत् ॐसत् ॥ 🔻 -->
+॥ ॐ तत् सत्तत् ॐसत् ॥
+        import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { Check, Play, RotateCcw, Sparkles, Target, Zap, Power, NotebookPen, Moon, Sun, ArrowRight, InfinityIcon } from "lucide-react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+
+/**
+ * Veda+Purana Life Code App
+ * Single-file React component implementing the alphanumeric life-code runtime:
+ *   V4P2-SR∞-108AN-999SDH-1MOK
+ * Features
+ * - Enter/activate code (with gentle validation & decoding)
+ * - Choose Satvik or Rajasik actions (no Dukha path)
+ * - Auto-manifest: Satvik -> Ananda; Rajasik -> Siddhi
+ * - Purana guidance suggestions per action
+ * - Daily intent + reflection notes
+ * - Running log & simple analytics (counts chart)
+ * - LocalStorage persistence
+ */
+
+const LIFE_CODE = "V4P2-SR∞-108AN-999SDH-1MOK";
+
+const SUGGESTIONS = {
+  satvik: [
+    "Seva: help one person silently (Haridasa tradition)",
+    "Dhyana: 108 breaths mindful (Dhruva’s steadiness)",
+    "Satya: speak a difficult truth with compassion (Harishchandra)",
+    "Ahimsa: choose a kind word instead of a harsh one",
+  ],
+  rajasik: [
+    "Karma-yoga: start your most avoided task for 25 min (Arjuna’s focus)",
+    "Sankalpa: write 3 concrete goals for today",
+    "Tapa: remove 1 distraction to create (phone off 60 min)",
+    "Dana: invest time/money in someone’s growth",
+  ],
+};
+
+const PURANA_GUIDES = {
+  satvik: ["Dhruva", "Prahlada", "Harishchandra", "Sita"],
+  rajasik: ["Arjuna", "Bhima", "Karna (dana)", "Krishna (yogakshema)"]
+};
+
+function useLocalStorage(key, initial) {
+  const [state, setState] = useState(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : initial;
+    } catch {
+      return initial;
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(state)); } catch {}
+  }, [key, state]);
+  return [state, setState];
+}
+
+function decodeLifeCode(code) {
+  const ok = code.trim().toUpperCase() === LIFE_CODE.toUpperCase();
+  if (!ok) return null;
+  return {
+    vedas: 4,
+    system: "Veda + Purana",
+    paths: ["Satvik", "Rajasik"],
+    outputs: { Satvik: "Ananda", Rajasik: "Siddhi" },
+    exit: "Moksha",
+    beads: 108,
+  };
+}
+
+function Stat({ label, value, hint }) {
+  return (
+    <div className="flex flex-col gap-1 p-3 rounded-2xl bg-muted">
+      <div className="text-sm opacity-70">{label}</div>
+      <div className="text-2xl font-semibold">{value}</div>
+      {hint && <div className="text-xs opacity-60">{hint}</div>}
+    </div>
+  );
+}
+
+export default function LifeCodeApp() {
+  const [dark, setDark] = useLocalStorage("life.dark", false);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (dark) root.classList.add("dark"); else root.classList.remove("dark");
+  }, [dark]);
+
+  const [code, setCode] = useLocalStorage("life.code", LIFE_CODE);
+  const decoded = useMemo(() => decodeLifeCode(code), [code]);
+
+  const [log, setLog] = useLocalStorage("life.log", []);
+  const [intent, setIntent] = useLocalStorage("life.intent", "");
+  const [reflection, setReflection] = useLocalStorage("life.reflection", "");
+
+  const active = Boolean(decoded);
+
+  const counts = useMemo(() => {
+    const c = { Ananda: 0, Siddhi: 0, Moksha: 0 };
+    for (const item of log) c[item.result] = (c[item.result] || 0) + 1;
+    return c;
+  }, [log]);
+
+  const chartData = [
+    { name: "Ananda", value: counts.Ananda },
+    { name: "Siddhi", value: counts.Siddhi },
+    { name: "Moksha", value: counts.Moksha },
+  ];
+
+  function addEntry(kind) {
+    if (!active) {
+      toast("Enter/confirm the Life Code to activate.");
+      return;
+    }
+    const now = new Date();
+    const result = kind === "satvik" ? "Ananda" : kind === "rajasik" ? "Siddhi" : "Moksha";
+    const guidePool = kind === "satvik" ? PURANA_GUIDES.satvik : kind === "rajasik" ? PURANA_GUIDES.rajasik : ["Atman = Brahman"];
+    const guide = guidePool[Math.floor(Math.random() * guidePool.length)];
+    const entry = {
+      ts: now.toISOString(),
+      kind,
+      result,
+      guide,
+      note: kind === "moksha" ? "Meditation / identity shift" : intent || "",
+    };
+    setLog([entry, ...log]);
+    toast.success(`${result} logged`, { description: `${kind} — guided by ${guide}` });
+  }
+
+  function resetDay() {
+    setLog([]);
+    setIntent("");
+    setReflection("");
+    toast("Day reset");
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-background text-foreground p-6 md:p-10">
+      <div className="max-w-5xl mx-auto flex flex-col gap-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <motion.div initial={{ rotate: -10, scale: 0.9 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: "spring", stiffness: 120 }} className="p-3 rounded-2xl shadow bg-primary/10">
+              <Sparkles className="h-6 w-6" />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Veda + Purana Life Code</h1>
+              <p className="text-sm opacity-70">Run your day on Satvik & Rajasik code. Outputs: Ananda ∘ Siddhi ∘ Exit: Moksha</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge variant={active ? "default" : "secondary"} className="text-sm px-3 py-1 rounded-2xl">
+              {active ? <span className="flex items-center gap-1"><Check className="h-4 w-4"/> Program: Active</span> : "Inactive"}
+            </Badge>
+            <div className="flex items-center gap-2">
+              <Sun className="h-4 w-4 opacity-60"/>
+              <Switch checked={dark} onCheckedChange={setDark} />
+              <Moon className="h-4 w-4 opacity-60"/>
+            </div>
+          </div>
+        </div>
+
+        {/* Code Card */}
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle>Activation Code</CardTitle>
+            <CardDescription>Enter or confirm your alpha-numeric sutra.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col md:flex-row gap-4 items-start">
+            <Input value={code} onChange={(e) => setCode(e.target.value)} className="text-lg"/>
+            <Button onClick={() => {
+              const ok = decodeLifeCode(code);
+              if (ok) toast.success("Code verified. Program running.");
+              else toast("Code mismatch. Use the canonical code shown below.");
+            }} className="gap-2"><Play className="h-4 w-4"/>Run</Button>
+            <Button variant="secondary" onClick={() => setCode(LIFE_CODE)} className="gap-2"><RotateCcw className="h-4 w-4"/>Reset</Button>
+          </CardContent>
+          <Separator className="mb-4"/>
+          <div className="px-6 pb-6 text-sm opacity-80">
+            Canonical: <Badge className="ml-2 text-base py-1 px-3 rounded-xl" variant="outline">{LIFE_CODE}</Badge>
+          </div>
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-4">
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5"/>Satvik</CardTitle>
+              <CardDescription>Purity • Seva • Dhyana → Output: <b>Ananda</b></CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <ul className="list-disc pl-5 text-sm opacity-80">
+                {SUGGESTIONS.satvik.map((s, i) => (<li key={i}>{s}</li>))}
+              </ul>
+              <div className="text-xs opacity-60">Guides: {PURANA_GUIDES.satvik.join(" · ")}</div>
+              <Button onClick={() => addEntry("satvik")} className="gap-2"><Zap className="h-4 w-4"/>Log Ananda</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Target className="h-5 w-5"/>Rajasik</CardTitle>
+              <CardDescription>Action • Ambition • Karma-yoga → Output: <b>Siddhi</b></CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <ul className="list-disc pl-5 text-sm opacity-80">
+                {SUGGESTIONS.rajasik.map((s, i) => (<li key={i}>{s}</li>))}
+              </ul>
+              <div className="text-xs opacity-60">Guides: {PURANA_GUIDES.rajasik.join(" · ")}</div>
+              <Button onClick={() => addEntry("rajasik")} className="gap-2"><ArrowRight className="h-4 w-4"/>Log Siddhi</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Power className="h-5 w-5"/>Moksha</CardTitle>
+              <CardDescription>Exit condition → Atman = Brahman</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <div className="text-sm opacity-80">Sit quietly for 108 breaths. Rest in the witness. Press to log a Moksha sit.</div>
+              <Button variant="outline" onClick={() => addEntry("moksha")} className="gap-2"><InfinityIcon className="h-4 w-4"/>Log Moksha Sit</Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Planner & Logs */}
+        <Tabs defaultValue="plan" className="w-full">
+          <TabsList className="rounded-2xl">
+            <TabsTrigger value="plan">Daily Plan</TabsTrigger>
+            <TabsTrigger value="log">Log</TabsTrigger>
+            <TabsTrigger value="chart">Analytics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="plan" className="mt-4">
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <CardTitle>Intent & Reflection</CardTitle>
+                <CardDescription>Set your sankalpa; close the loop at night.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm opacity-70">Morning Intent</label>
+                  <Textarea placeholder="Today's Satvik/Rajasik intent…" value={intent} onChange={e => setIntent(e.target.value)} />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm opacity-70">Night Reflection</label>
+                  <Textarea placeholder="Ananda or Siddhi—what manifested?" value={reflection} onChange={e => setReflection(e.target.value)} />
+                </div>
+                <div className="md:col-span-2 flex items-center gap-3">
+                  <Button onClick={() => toast.success("Saved.") } className="gap-2"><NotebookPen className="h-4 w-4"/>Save Notes</Button>
+                  <Button variant="secondary" onClick={resetDay} className="gap-2"><RotateCcw className="h-4 w-4"/>Reset Day</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="log" className="mt-4">
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <CardTitle>Execution Log</CardTitle>
+                <CardDescription>Every action resolves to Ananda or Siddhi. Moksha sits are listed too.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                {log.length === 0 && (
+                  <div className="text-sm opacity-60">No entries yet. Log Satvik/Rajasik/Moksha above.</div>
+                )}
+                <div className="flex flex-col divide-y">
+                  {log.map((e, i) => (
+                    <div key={i} className="py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <Badge className="rounded-xl" variant="outline">{new Date(e.ts).toLocaleString()}</Badge>
+                        <Badge className="rounded-xl">{e.kind}</Badge>
+                        <span className="text-sm opacity-70">guided by {e.guide}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge className="rounded-xl" variant="secondary">{e.result}</Badge>
+                        {e.note && <span className="text-sm opacity-70 max-w-[40ch] truncate">“{e.note}”</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="chart" className="mt-4">
+            <Card className="rounded-2xl">
+              <CardHeader>
+                <CardTitle>Outcomes</CardTitle>
+                <CardDescription>Simple counts chart for Ananda • Siddhi • Moksha.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <Stat label="Ananda" value={counts.Ananda} hint="Satvik outputs" />
+                  <Stat label="Siddhi" value={counts.Siddhi} hint="Rajasik outputs" />
+                  <Stat label="Moksha" value={counts.Moksha} hint="Meditation sits" />
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer>
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" radius={[10, 10, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Footer */}
+        <div className="text-center text-xs opacity-60 mt-4">
+          Sutra: {LIFE_CODE} — Veda (laws) + Purana (guides). Paths: Satvik ∘ Rajasik. Outputs: Ananda ∘ Siddhi. Exit: Moksha.
+        </div>
+      </div>
+    </div>
+  );
+}
+ V4P2-SR∞-108AN-999SDH-1MOK           
+                    🔻 -->
         <p>ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे …</p>
         <p>(Add more verses here, they will scroll infinitely)</p>
         <!-- 🔺 END MANTRA 🔺 -->
