@@ -2,7 +2,7 @@
 <html lang="sa">
 <head>
   <meta charset="UTF-8" />
-  <title>Chandi Path — Locked</title>
+  <title>Chandi Path — Future Flow</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
@@ -28,33 +28,20 @@
     .text   { position: absolute; width: 100%; animation: scroll-up 200s linear infinite; }
     @keyframes scroll-up { 0% { top: 100%; } 100% { top: -100%; } }
     .muted { color: #9c8c7a; font-size: 0.9rem; }
-    input, button { padding: 10px 14px; border-radius: 12px; border: 1px solid #ccb889; }
-    button { background: #fff0c7; cursor: pointer; font-weight: 600; }
-    #content { display:none; margin-top:18px; }
-    #hiddenMantra { display:none; }
-    .lock-controls { margin:12px 0; }
   </style>
 </head>
 <body>
-  <div class="card" id="lockCard">
-    <h2>🔒 Protected Page</h2>
-    <div class="muted">Enter alphanumeric code to unlock</div>
-    <div class="lock-controls">
-      <input id="code" type="password" placeholder="Enter code" />
-      <button id="unlock">Unlock</button>
-    </div>
-    <div id="status" class="muted"></div>
+  <div class="card">
+    <h2>✨ भविष्य प्रवाह (Future Flow) ✨</h2>
+    <div id="futureContent"></div>
   </div>
 
-  <!-- Content area (appears after unlock) -->
-  <div id="content"></div>
-
-  <!-- HIDDEN MANTRA (locked until unlock) -->
-  <div id="hiddenMantra">
-    <h1>॥ चण्डीपाठ ॥</h1>
+  <div id="hiddenMantra" style="display:none;">
+    <h1>॥ चण्डीपाठ — भविष्य ॥</h1>
     <div class="scroll">
       <div class="text">
-        <!-- 🔻 PUT YOUR FULL MANTRA / PATH HERE 
+        <p>ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे …</p>
+        <p>(Here, keep adding verses, they will flow as the “future”) 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2524,57 +2511,18 @@
             
     
                  
-                    🔻 -->
-        <p>ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे …</p>
-        <p>(Add more verses here, they will scroll infinitely)</p>
-        <!-- 🔺 END MANTRA 🔺 -->
+</p>
+        <p>भविष्य समयः अनन्त प्रवाहः …</p>
+        <p>Time flows, future runs, present becomes sacred gift …</p>
       </div>
     </div>
   </div>
-  <!-- END MANTRA -->
 
- <script>
-  // ===== CONFIG =====
- 
-  const PASS_HASH_HEX = "4f45d264d0d1dfc4dc19c978fe3c2c4f3773bcd4492c8a8c973119379b01054c"; 
-  // ==================
-
-    const enc = new TextEncoder();
-    function hex(buf) {
-      return Array.from(new Uint8Array(buf))
-        .map(b => b.toString(16).padStart(2,"0")).join("");
-    }
-    async function sha256Hex(str) {
-      const buf = await crypto.subtle.digest("SHA-256", enc.encode(str));
-      return hex(buf);
-    }
-
-    async function tryUnlock(code) {
-      const status = document.getElementById("status");
-      status.textContent = "Checking…";
-      const h = await sha256Hex(code);
-      if (h !== PASS_HASH_HEX) {
-        status.textContent = "Incorrect code.";
-        return;
-      }
-      status.textContent = "Unlocked ✅";
-
-      // Show mantra
-      const hidden = document.getElementById("hiddenMantra").innerHTML;
-      document.getElementById("content").innerHTML = hidden;
-      document.getElementById("content").style.display = "block";
-
-      // Hide lock UI
-      document.getElementById("lockCard").style.display = "none";
-    }
-
-    document.getElementById("unlock").addEventListener("click", () => {
-      const val = document.getElementById("code").value.trim();
-      tryUnlock(val);
-    });
-    document.getElementById("code").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") document.getElementById("unlock").click();
-    });
+  <script>
+    // Auto-run future (no password needed)
+    const hidden = document.getElementById("hiddenMantra").innerHTML;
+    document.getElementById("futureContent").innerHTML = hidden;
   </script>
 </body>
 </html>
+
