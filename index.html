@@ -1,47 +1,56 @@
 <!DOCTYPE html>
 <html lang="sa">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chandi Path — Future Flow</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: "Noto Serif Devanagari", serif;
-      background: #fefbea;
-      color: #4a2c2a;
-      line-height: 1.8;
-      display: grid;
-      place-items: center;
-      height: 100vh;
-      margin: 0;
-      padding: 16px;
-    }
-    .card {
-      width: min(900px, 92vw);
-      background: #fff8e6;
-      border: 1px solid #f0e2c2;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.06);
-      padding: 24px;
-    }
-    .scroll { height: 80vh; overflow: hidden; position: relative; }
-    .text   { position: absolute; width: 100%; animation: scroll-up 200s linear infinite; }
-    @keyframes scroll-up { 0% { top: 100%; } 100% { top: -100%; } }
-    .muted { color: #9c8c7a; font-size: 0.9rem; }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Chandi Path — Future Flow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: "Noto Serif Devanagari", serif;
+      background: #fefbea;
+      color: #4a2c2a;
+      line-height: 1.8;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+    .card {
+      width: min(900px, 92vw);
+      background: #fff8e6;
+      border: 1px solid #f0e2c2;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.06);
+      padding: 24px;
+    }
+    .scroll { height: 80vh; overflow: hidden; position: relative; }
+    .text { position: absolute; width: 100%; animation: scroll-up 200s linear infinite; }
+    @keyframes scroll-up { 0% { top: 100%; } 100% { top: -100%; } }
+    .muted { color: #9c8c7a; font-size: 0.9rem; }
+    .password-input { font-size: 1rem; padding: 8px; margin-bottom: 12px; }
+    .btn { padding: 8px 16px; font-size: 1rem; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <div class="card">
-    <h2>✨ भविष्य प्रवाह (Future Flow) ✨</h2>
-    <div id="futureContent"></div>
-  </div>
+  <div class="card">
+    <h2>✨ भविष्य प्रवाह (Future Flow) ✨</h2>
+    <div id="passwordBox">
+      <input type="password" id="passwordInput" class="password-input" placeholder="Enter password" />
+      <button class="btn" onclick="checkPassword()">Unlock</button>
+    </div>
+    <div id="futureContent" style="display:none;"></div>
+  </div>
 
-  <div id="hiddenMantra" style="display:none;">
-    <h1>॥ चण्डीपाठ — भविष्य ॥</h1>
-    <div class="scroll">
-      <div class="text">
-        <p>ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे …</p>
-        <p>(Here, keep adding verses, they will flow as the “future”) 
+  <div id="hiddenMantra" style="display:none;">
+    <h1>॥ चण्डीपाठ — भविष्य ॥</h1>
+    <div class="scroll">
+      <div class="text">
+        <!-- Your Chandi Path verses go here -->
+        <p>ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे …</p>
+        <p>सर्वेषां दुःख निवारणाय …</p>
+        <p>भविष्य समयः अनन्त प्रवाहः …</p>
+        <p>Time flows, future runs, present becomes sacred gift …</p>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2511,18 +2520,26 @@
             
     
                  
-</p>
-        <p>भविष्य समयः अनन्त प्रवाहः …</p>
-        <p>Time flows, future runs, present becomes sacred gift …</p>
-      </div>
-    </div>
-  </div>
+<!-- Add more <p> verses as needed -->
+      </div>
+    </div>
+  </div>
 
-  <script>
-    // Auto-run future (no password needed)
-    const hidden = document.getElementById("hiddenMantra").innerHTML;
-    document.getElementById("futureContent").innerHTML = hidden;
-  </script>
+  <script>
+    const correctPassword = "radha123"; // change this to your desired password
+
+    function checkPassword() {
+      const input = document.getElementById("passwordInput").value;
+      if(input === correctPassword) {
+        const hidden = document.getElementById("hiddenMantra").innerHTML;
+        document.getElementById("futureContent").innerHTML = hidden;
+        document.getElementById("futureContent").style.display = "block";
+        document.getElementById("passwordBox").style.display = "none";
+      } else {
+        alert("Incorrect password! 🙏");
+      }
+    }
+  </script>
 </body>
 </html>
 
